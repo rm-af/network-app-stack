@@ -1,0 +1,117 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Resources:
+  LKSVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 15.32.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: LKS-VPC
+
+  LKSInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: LKS-IGW
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref LKSVPC
+      InternetGatewayId: !Ref LKSInternetGateway
+
+  LKSPublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref LKSVPC
+      CidrBlock: 15.32.1.0/24
+      AvailabilityZone: us-west-2a
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: LKS-Public-Subnet1
+
+  LKSPublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref LKSVPC
+      CidrBlock: 15.32.2.0/24
+      AvailabilityZone: us-west-2b
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: LKS-Public-Subnet2
+
+  LKSPrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref LKSVPC
+      CidrBlock: 15.32.3.0/24
+      AvailabilityZone: us-west-2a
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: LKS-Private-Subnet1
+
+  LKSPrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref LKSVPC
+      CidrBlock: 15.32.4.0/24
+      AvailabilityZone: us-west-2b
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: LKS-Private-Subnet2
+
+  LKSPublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref LKSVPC
+      Tags:
+        - Key: Name
+          Value: LKS-Public-RT
+
+  LKSDefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref LKSPublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref LKSInternetGateway
+
+  LKSPublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref LKSPublicSubnet1
+      RouteTableId: !Ref LKSPublicRouteTable
+
+  LKSPublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref LKSPublicSubnet2
+      RouteTableId: !Ref LKSPublicRouteTable
+
+  LKSPrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref LKSVPC
+      Tags:
+        - Key: Name
+          Value: LKS-Private-RT
+
+  LKSPrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref LKSPrivateSubnet1
+      RouteTableId: !Ref LKSPrivateRouteTable
+
+  LKSPrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref LKSPrivateSubnet2
+      RouteTableId: !Ref LKSPrivateRouteTable
